@@ -1,21 +1,16 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import produce from 'immer';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { makeStyles } from '@material-ui/core/styles';
-import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import Slider from '@material-ui/core/Slider';
 import Button from '@material-ui/core/Button';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
-import InputLabel from '@material-ui/core/InputLabel';
 
 
-
+//neighbours
 const operations = [
   [1, 0],
   [-1, 0],
@@ -32,7 +27,10 @@ const operations = [
 
 function App() {
 
-  let initial_layout = 50;
+  //initial grid size
+  let initial_layout = 35;
+
+  //create the initial empty grid
   const [grid, setGrid] = useState(() => {
     const rows = [];
     for (let i = 0; i < initial_layout; i++) {
@@ -41,54 +39,65 @@ function App() {
     return rows;
   });
 
+  //if is running
   const [running, setRunning] = useState(false);
+  //speed between each iteration
   const [interval, setInterval] = React.useState<number>(750);
+  //grid size
   const [layout, setLayout] = React.useState<number>(initial_layout);
 
+  //width for each square
+  const [width, setWidth] = useState(0);
+
+  //if clear
+  const [clear, setClear] = React.useState<boolean>(false);
+
+
+  //ref if running
   const runningRef = useRef(running);
   runningRef.current = running;
 
+  //ref for the interval
   const intervalRef = useRef(interval);
   intervalRef.current = interval;
 
+  //ref ror the layout
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
 
-  const [width, setWidth] = useState(0);
+  //the container
   const elementRef = React.useRef<HTMLDivElement>();
 
-  const [clear, setClear] =  React.useState<boolean>(false);
 
-  const useStyles = makeStyles({
-    root: {
-      width: 200,
-    },
-  });
 
+  //set interval on change
+  const changeInterval = (event: any, newValue: number | number[]) => {
+    setInterval(newValue as number);
+  };
+
+  //change layout
+  const changeLayout = (event: any, newValue: any) => {
+    console.log(newValue.props.value);
+    setLayout(newValue.props.value);
+  };
+
+  //clear grid
+  const changeClear = () => {
+    setClear(!clear);
+  }
+
+
+
+  //get square size on layout update
   useEffect(() => {
     if (elementRef && elementRef.current) {
       setWidth((elementRef.current.getBoundingClientRect().width - 30) / layout);
     }
   }, [layout]);
 
-  const classes = useStyles();
-  const [value, setValue] = React.useState<number>(1000);
-
-  const handleChange = (event: any, newValue: number | number[]) => {
-    setInterval(newValue as number);
-  };
-
-  const changeLayout = (event: any, newValue: any) => {
-    console.log(newValue.props.value);
-    setLayout(newValue.props.value);
-  };
-
-  const changeClear = () => {
-    setClear(!clear);
-  }
-
+  //reset grid if layout changes or clears
   useEffect(() => {
-        setGrid(() => {
+    setGrid(() => {
       const rows = [];
       for (let i = 0; i < layout; i++) {
         rows.push(Array.from(Array(layout), () => 0));
@@ -97,9 +106,10 @@ function App() {
     });
     setRunning(false);
     console.log(grid);
-  },[layout, clear] );
+  }, [layout, clear]);
 
 
+  //returns a random grid
   const randomGrid = () => {
     setGrid(() => {
       const rows = [];
@@ -113,10 +123,12 @@ function App() {
   }
 
 
+
+  //main funcion
   const runSimulation = useCallback(() => {
+    //if is is not running
     if (!runningRef.current)
       return;
-
     //simulate
     setGrid(g => {
       console.log(layoutRef.current);
@@ -146,25 +158,27 @@ function App() {
     setTimeout(runSimulation, intervalRef.current);
   }, [])
 
+
+
+
+
   return (
     <div className="container" ref={elementRef}>
       <h1>Game Of Life</h1>
       <div className="row">
         <div className="col-8 buttons">
           <div className="row">
-
-            
             <div className="col-3">
-              <Button variant="contained" color={
-                running ? 'primary' : 'secondary'}
+              <Button
+                variant="contained"
+                color={running ? 'primary' : 'secondary'}
                 onClick={() => {
                   setRunning(!running);
-
-
                   runningRef.current = true;
                   runSimulation();
-
-                }}>{running ? 'stop' : 'start'}</Button>
+                }}>
+                {running ? 'stop' : 'start'}
+              </Button>
             </div>
             <div className="col-3">
               <Button variant="contained" onClick={changeClear}>Clear</Button>
@@ -181,13 +195,11 @@ function App() {
                 label="Layout"
                 disabled={running}
               >
-
                 <MenuItem value={10}>10x10</MenuItem>
                 <MenuItem value={20}>20x20</MenuItem>
                 <MenuItem value={35}>35x35</MenuItem>
                 <MenuItem value={50}>50X50</MenuItem>
                 <MenuItem value={100}>100X100</MenuItem>
-
               </Select>
             </div>
           </div>
@@ -197,8 +209,8 @@ function App() {
             <div className="col-12">
               <Typography id="discrete-slider" gutterBottom>
                 Speed
-      </Typography>
-              <Slider value={interval} min={100} track="inverted" max={1500} onChange={handleChange} aria-labelledby="continuous-slider" />
+              </Typography>
+              <Slider value={interval} min={100} track="inverted" max={1500} onChange={changeInterval} aria-labelledby="continuous-slider" />
             </div>
           </div>
         </div>
